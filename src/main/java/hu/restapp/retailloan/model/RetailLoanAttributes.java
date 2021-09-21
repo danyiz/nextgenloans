@@ -1,4 +1,4 @@
-package hu.restapp.retailloan;
+package hu.restapp.retailloan.model;
 
 import lombok.Getter;
 import lombok.Setter;
