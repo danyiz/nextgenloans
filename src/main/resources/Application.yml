@@ -9,3 +9,6 @@ spring:
     driverClassName: org.h2.Driver
   flyway:
     enabled: false
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html
