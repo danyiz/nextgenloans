@@ -1,7 +1,8 @@
 package hu.restapp.controller;
 
 import hu.restapp.retailloan.RetailLoanCalculator;
-import hu.restapp.retailloan.ScheduleDTO;
+import hu.restapp.retailloan.model.RetailLoanAttributes;
+import hu.restapp.retailloan.model.RetailLoanScheduleDTO;
 import hu.restapp.systemutility.SystemFrequency;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ public class LoanController {
     }
 
     @RequestMapping("/calcloan")
-    public List<ScheduleDTO> calcLoan() {
+    public List<RetailLoanScheduleDTO> calcLoan() {
         log.info("CalcLoan is called");
         BigDecimal intrate = new BigDecimal("27.90000000");
         intrate.setScale(8, RoundingMode.HALF_EVEN);
@@ -50,12 +51,14 @@ public class LoanController {
         loanAmount.setScale(8, RoundingMode.HALF_EVEN);
         BigDecimal subsidizedRate = new BigDecimal("0.00000000") ;
         BigDecimal bonusRate = new BigDecimal("0.00000000") ;
-
-        retailLoanCalculator.setLoanPrincipalAmount(loanAmount);
-        retailLoanCalculator.setLoanInterestRate(intrate);
-        retailLoanCalculator.setNumberOfPayments(numOfPAy);
-        retailLoanCalculator.generateSchedule(true);
+        RetailLoanAttributes retailLoanAttributes = new RetailLoanAttributes();
+        retailLoanAttributes.setCalculationBasis(360);
+        retailLoanAttributes.setLoanPrincipalAmount(loanAmount);
+        retailLoanAttributes.setLoanInterestRate(intrate);
+        retailLoanAttributes.setNumberOfPayments(numOfPAy);
+        retailLoanAttributes.setDaysInPeriod(Integer.valueOf(30));
+        retailLoanAttributes.setCorrectionCoefficient(BigDecimal.valueOf(1L));
+        retailLoanCalculator.generateSchedule(true,retailLoanAttributes);
         return retailLoanCalculator.getLoanShed();
     }
-
 }

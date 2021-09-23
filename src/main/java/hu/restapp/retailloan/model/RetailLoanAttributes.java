@@ -25,4 +25,6 @@ public class RetailLoanAttributes {
     private BigDecimal subsidizedInterestRate;
     @NotNull
     private BigDecimal correctionCoefficient;
+    @NotNull
+    private Integer daysInPeriod;
 }

@@ -1,4 +1,4 @@
-package hu.restapp.retailloan;
+package hu.restapp.retailloan.model;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 
 @AllArgsConstructor
-public class ScheduleDTO {
+public class RetailLoanScheduleDTO {
     @Getter@Setter
     LocalDate valueDate;
     @Getter@Setter

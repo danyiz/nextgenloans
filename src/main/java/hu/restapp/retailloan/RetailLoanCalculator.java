@@ -1,7 +1,9 @@
 package hu.restapp.retailloan;
 
+import hu.restapp.retailloan.model.RetailLoanAttributes;
 import hu.restapp.retailloan.model.RetailLoanSchedule;
 import hu.restapp.retailloan.model.RetailLoanScheduleRepository;
+import hu.restapp.retailloan.model.RetailLoanScheduleDTO;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,52 +40,50 @@ public class RetailLoanCalculator {
     InterestCalculatorFactoryInterface interestCalculatorFactory;
 
 
-    public List<ScheduleDTO> loanShed = new ArrayList<>();
-    private int Base = 360;
-    private BigDecimal loanPrincipalAmount;
-    private BigDecimal loanInterestRate;
-    private int numberOfPayments;
+    public List<RetailLoanScheduleDTO> loanShed = new ArrayList<>();
+
 
     InterestCalculatorTypes interestCalculatorType = InterestCalculatorTypes.BASIC;
     RegularPaymentCalculatorTypes regularPaymentCalculatorType = RegularPaymentCalculatorTypes.BASIC;
 
-    public BigDecimal calculateLoanInterestPartForPeriod(BigDecimal principalAmount, BigDecimal loanInterestRate, Integer interestBase, Long numberOfDays)
+    public BigDecimal calculateLoanInterestPartForPeriod(RetailLoanAttributes retailLoanAttributes)
     {
         InterestCalculatorInterface interestCalculatorInterface = interestCalculatorFactory.createInterestCalculator(interestCalculatorType);
-        return interestCalculatorInterface.calculateInterestForPeriod(principalAmount, loanInterestRate,numberOfDays, interestBase).getInterestAmount().round(new MathContext(5));
+        return interestCalculatorInterface.calculateInterestForPeriod(retailLoanAttributes).getInterestAmount();
     }
 
-    public BigDecimal calculateRegularPayment(){
+    public BigDecimal calculateRegularPayment(RetailLoanAttributes retailLoanAttributes){
         RegularPaymentCalculatorInterface regularPaymentCalculatorInterface = regularPaymentCalculatorFactory.createRegularPaymentCalculator(regularPaymentCalculatorType);
-        return regularPaymentCalculatorInterface.calculateRegularPayment(loanInterestRate,loanPrincipalAmount,numberOfPayments,BigDecimal.valueOf(365/360));
+        return regularPaymentCalculatorInterface.calculateRegularPayment(retailLoanAttributes);
     }
 
-   public void generateSchedule (boolean persistScheduleToDB) {
+   public void generateSchedule (boolean persistScheduleToDB,RetailLoanAttributes retailLoanAttributes) {
 
         LocalDate valueDate = LocalDate.now();
-        BigDecimal outstandingPrincipalAmount = loanPrincipalAmount;
+        BigDecimal outstandingPrincipalAmount = retailLoanAttributes.getLoanPrincipalAmount();
 
-        BigDecimal regularPayment = calculateRegularPayment();
+        BigDecimal regularPayment = calculateRegularPayment(retailLoanAttributes);
 
-        for(int i = 1; i< numberOfPayments +1; i ++) {
+        for(int i = 1; i< retailLoanAttributes.getNumberOfPayments() +1; i ++) {
 
             valueDate = triggerDateUtility.calcNextDate(1,valueDate,valueDate.getDayOfMonth());
 
-            BigDecimal interestForPeriod = calculateLoanInterestPartForPeriod(outstandingPrincipalAmount, loanInterestRate,this.Base,30L);
+            BigDecimal interestForPeriod = calculateLoanInterestPartForPeriod(retailLoanAttributes);
 
             BigDecimal principalAmountPartForPeriod = regularPayment.subtract(interestForPeriod);
+            retailLoanAttributes.setLoanPrincipalAmount(retailLoanAttributes.getLoanPrincipalAmount().subtract(principalAmountPartForPeriod));
 
             if (principalAmountPartForPeriod.longValue() > outstandingPrincipalAmount.longValue()) {
                 // in last payment the whole principal
                 principalAmountPartForPeriod = outstandingPrincipalAmount;
             }
 
-            ScheduleDTO scheduleItem = new ScheduleDTO(valueDate,"111111111111",i,
-                    outstandingPrincipalAmount,
+            RetailLoanScheduleDTO scheduleItem = new RetailLoanScheduleDTO(valueDate,"111111111111",i,
+                    retailLoanAttributes.getLoanPrincipalAmount(),
                     interestForPeriod,
                     principalAmountPartForPeriod,
                     regularPayment,
-                    loanInterestRate,
+                    retailLoanAttributes.getLoanInterestRate(),
                     BigDecimal.valueOf(0L),
                     BigDecimal.valueOf(0L),
                     BigDecimal.valueOf(0L));

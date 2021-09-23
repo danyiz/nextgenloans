@@ -1,14 +1,16 @@
 package hu.restapp.retailloan;
 
+import hu.restapp.retailloan.model.RetailLoanAttributes;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class BasicLoanInterestCalculator implements InterestCalculatorInterface {
 
     @Override
-    public Interest calculateInterestForPeriod(BigDecimal principalAmount, BigDecimal interestRate, Long daysInPeriod,Integer interestBase) {
+    public Interest calculateInterestForPeriod(RetailLoanAttributes retailLoanAttributes) {
         Interest interestForPeriod = new Interest();
-        interestForPeriod.setInterestAmount(calculateDailyInterest(principalAmount, interestRate, interestBase).getInterestAmount().multiply(BigDecimal.valueOf(daysInPeriod)));
+        interestForPeriod.setInterestAmount(calculateDailyInterest(retailLoanAttributes.getLoanPrincipalAmount(), retailLoanAttributes.getLoanInterestRate(),retailLoanAttributes.getCalculationBasis()).getInterestAmount().multiply(BigDecimal.valueOf(retailLoanAttributes.getDaysInPeriod())));
         return interestForPeriod;
     }
 
