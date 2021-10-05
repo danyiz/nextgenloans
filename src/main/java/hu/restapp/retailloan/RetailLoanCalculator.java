@@ -88,6 +88,14 @@ public class RetailLoanCalculator {
             retailLoanAttributes.setValueDate(triggerDateUtility.calcNextDate(retailLoanAttributes.getSettlementFrequencyInMoths(),
                                                                                 retailLoanAttributes.getValueDate(),
                                                                                 retailLoanAttributes.getPayDay()));
+            // Period start date
+            // Period end date
+            // Days in period
+
+            // Interest change array
+            // Early repayment array
+
+            // Generate Eventschema
 
             retailLoanAttributes.setInterestPart(calculateLoanInterestPartForPeriod(retailLoanAttributes));
 
