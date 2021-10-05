@@ -41,11 +41,6 @@ public class RetailLoanCalculator {
     @Autowired
     RegularPaymentSplitterFactory regularPaymentSplitterFactory;
 
-    @Autowired
-    CurrencyDAO currencyDAO;
-
-
-
     public BigDecimal calculateLoanInterestPartForPeriod(RetailLoanAttributes retailLoanAttributes)
     {
         InterestCalculatorInterface interestCalculatorInterface = interestCalculatorFactory.createInterestCalculator(retailLoanAttributes.getInterestCalculatorType());
@@ -53,13 +48,16 @@ public class RetailLoanCalculator {
     }
 
     public BigDecimal calculateRegularPayment(RetailLoanAttributes retailLoanAttributes){
+
         if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>retailLoanAttributes.getNextPaymentNumber()){
             retailLoanAttributes.setRegularPaymentCalculatorType(RegularPaymentCalculatorTypes.PRINCIPAL_DELAYED);
         }else
         {
             retailLoanAttributes.setRegularPaymentCalculatorType(RegularPaymentCalculatorTypes.BASIC);
         }
+
         RegularPaymentCalculatorInterface regularPaymentCalculatorInterface = regularPaymentCalculatorFactory.createRegularPaymentCalculator(retailLoanAttributes.getRegularPaymentCalculatorType());
+
         return regularPaymentCalculatorInterface.calculateRegularPayment(retailLoanAttributes);
     }
 
@@ -73,6 +71,7 @@ public class RetailLoanCalculator {
         }
 
         RegularPaymentSplitterInterface regularPaymentSplitterFactoryInterface = regularPaymentSplitterFactory.createRegularPaymentSplitter(retailLoanAttributes.getRegularPaymentSplitterTypes());
+
         return regularPaymentSplitterFactoryInterface.splitRegularPayment(retailLoanAttributes);
     }
 
@@ -82,12 +81,6 @@ public class RetailLoanCalculator {
         retailLoanAttributes.setValueDate(LocalDate.now());
 
         retailLoanAttributes.setRegularPayment(calculateRegularPayment(retailLoanAttributes));
-        Currency currency;
-        try {
-           currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
-        } catch (CurrencyNotExistsException e) {
-           e.printStackTrace();
-        }
 
         for(int i = 1; i< retailLoanAttributes.getNumberOfPayments() +1; i ++) {
 
@@ -111,9 +104,10 @@ public class RetailLoanCalculator {
 
             retailLoanAttributes.setLoanPrincipalAmount(retailLoanAttributes.getLoanPrincipalAmount().subtract(retailLoanAttributes.getPrincipalPart()));
 
-           RetailLoanSchedule scheduleItem = modelMapper.map(retailLoanAttributes, RetailLoanSchedule.class);
-           RetailLoanScheduleDTO scheduleDTO =  modelMapper.map(scheduleItem, RetailLoanScheduleDTO.class);
-           loanShed.add(scheduleDTO);
+            RetailLoanSchedule scheduleItem = modelMapper.map(retailLoanAttributes, RetailLoanSchedule.class);
+            RetailLoanScheduleDTO scheduleDTO =  modelMapper.map(scheduleItem, RetailLoanScheduleDTO.class);
+
+            loanShed.add(scheduleDTO);
 
             if(persistScheduleToDB){
                 retailLoanScheduleRepository.save(scheduleItem);
@@ -124,9 +118,7 @@ public class RetailLoanCalculator {
                 log.info("Recalculating regular payment: {}",retailLoanAttributes);
                 retailLoanAttributes.setRegularPayment(calculateRegularPayment(retailLoanAttributes));
             }
-
         }
         return loanShed;
     }
-
 }

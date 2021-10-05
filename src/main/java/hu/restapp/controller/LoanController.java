@@ -1,8 +1,7 @@
 package hu.restapp.controller;
 
 import hu.restapp.retailloan.RetailLoanCalculator;
-import hu.restapp.retailloan.model.RetailLoanAttributes;
-import hu.restapp.retailloan.model.RetailLoanScheduleDTO;
+import hu.restapp.retailloan.model.*;
 import hu.restapp.systemutility.SystemFrequency;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +18,9 @@ import java.util.List;
 @RestController
 @Slf4j
 public class LoanController {
+
+    @Autowired
+    CurrencyDAO currencyDAO;
 
     @Autowired
     RetailLoanCalculator retailLoanCalculator;
@@ -64,6 +66,14 @@ public class LoanController {
         retailLoanAttributes.setPayDay(12);
         retailLoanAttributes.setSettlementFrequencyInMoths(1);
         retailLoanAttributes.setPrincipalPart(new BigDecimal("0"));
+
+         Currency currency;
+         try {
+             currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
+             retailLoanAttributes.setCurrencyDecimals(currency.getCurrencyDecimals());
+         } catch (CurrencyNotExistsException e) {
+             e.printStackTrace();
+         }
 
         return retailLoanCalculator.generateSchedule(true,retailLoanAttributes);
     }
