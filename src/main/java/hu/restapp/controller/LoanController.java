@@ -35,7 +35,6 @@ public class LoanController {
         log.info("Next date is called");
         LocalDate localDate = LocalDate.now();
         return new TriggerDateUtility().calculateNextDateFromDate(localDate, SystemFrequency.YEARLY,18).toString();
-        //return new TriggerDate().getNextDateFromDate(localDate, SystemFrequency.MONTHLY,26).toString();
     }
 
      @GetMapping("/calcdays")
@@ -67,13 +66,12 @@ public class LoanController {
         retailLoanAttributes.setSettlementFrequencyInMoths(1);
         retailLoanAttributes.setPrincipalPart(new BigDecimal("0"));
 
-         Currency currency;
-         try {
-             currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
-             retailLoanAttributes.setCurrencyDecimals(currency.getCurrencyDecimals());
-         } catch (CurrencyNotExistsException e) {
-             e.printStackTrace();
-         }
+        try {
+         Currency currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
+         retailLoanAttributes.setCurrencyDecimals(currency.getCurrencyDecimals());
+        } catch (CurrencyNotExistsException e) {
+         e.printStackTrace();
+        }
 
         return retailLoanCalculator.generateSchedule(true,retailLoanAttributes);
     }
