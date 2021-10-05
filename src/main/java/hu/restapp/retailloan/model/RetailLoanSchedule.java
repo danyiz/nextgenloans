@@ -1,13 +1,15 @@
 package hu.restapp.retailloan.model;
 
 import hu.restapp.retailloan.model.AuditHistory;
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString
 @Entity
 @Table(name="RetailLoanSchedule")
 public class RetailLoanSchedule {
@@ -17,25 +19,30 @@ public class RetailLoanSchedule {
     private Long id;
     @Embedded
     private AuditHistory audit = new AuditHistory();
-    @Column(nullable = false)
+    @Column//(nullable = false)
     private Long dailySequence;
     @Column//(nullable = false)
     private LocalDate valueDate;
     @Column(nullable = false)
     private String accountNumber;
-
+    @Column(nullable = false)
+    private String currencyCode;
     @Column(nullable = false)
     private Integer numberOfPayments;
-    @Column(nullable = false)
-    private BigDecimal outstandingPrincipal;
-    @Column(nullable = false)
+    @Column//(nullable = false)
+    private Integer termsToDelayPrincipalPayment;
+    @Column//(nullable = false)
+    private Integer nextPaymentNumber;
+    @Column//(nullable = false)
+    private BigDecimal loanPrincipalAmount;
+    @Column//(nullable = false)
     private BigDecimal interestPart;
-    @Column(nullable = false)
+    @Column//(nullable = false)
     private BigDecimal principalPart;
-    @Column(nullable = false)
+    @Column//(nullable = false)
     private BigDecimal regularPayment;
-    @Column(nullable = false)
-    private BigDecimal standardInterestRate;
+    @Column//(nullable = false)
+    private BigDecimal loanInterestRate;
     @Column
     private BigDecimal subsidizedInterestRate;
     @Column

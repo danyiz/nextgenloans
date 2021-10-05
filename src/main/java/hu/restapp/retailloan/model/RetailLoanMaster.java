@@ -1,13 +1,18 @@
 package hu.restapp.retailloan.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@ToString
 @Entity
 @Table(name = "RetailLoanMaster")
 public class RetailLoanMaster extends RetailLoanBase {

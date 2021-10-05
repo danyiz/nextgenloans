@@ -1,8 +1,6 @@
 package hu.restapp.retailloan;
 
-public enum RegularPaymentCalculatorTypes {
+public enum RegularPaymentSplitterTypes {
     BASIC,
     PRINCIPAL_DELAYED
 }
-
-

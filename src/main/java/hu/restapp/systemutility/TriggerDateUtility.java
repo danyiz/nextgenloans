@@ -14,7 +14,7 @@ public class TriggerDateUtility implements DateUtility {
     }
 
     @Override
-    public LocalDate getNextDateFromDate(LocalDate fromDate, SystemFrequency frequency, Integer day) {
+    public LocalDate calculateNextDateFromDate(LocalDate fromDate, SystemFrequency frequency, Integer day) {
         if(Objects.isNull(fromDate)) fromDate = LocalDate.now();
         LocalDate localDate = fromDate;
         switch(frequency) {
@@ -54,12 +54,21 @@ public class TriggerDateUtility implements DateUtility {
     public LocalDate calcNextDate(Integer plusMonths, LocalDate fromDate, Integer day){
 
         int currentDay = fromDate.getDayOfMonth();
-        if (currentDay<day && plusMonths.intValue()>=1) {
-            plusMonths = plusMonths-1;
+        if (currentDay<day && plusMonths>=1) {
+            if(fromDate.getMonth().getValue() == 2 && (fromDate.getDayOfMonth() != 28)) {
+                plusMonths = plusMonths - 1;
+            }
         }
+        int dayInternal = day;
+        if(fromDate.getMonth().getValue() == 1 && (dayInternal == 29 || dayInternal == 30 || dayInternal == 31)){
+            dayInternal = 28;
+            fromDate = fromDate.minusDays(day-28);
+        }
+
         LocalDate localDate = fromDate.plusMonths(plusMonths);
         int  month = localDate.getMonth().getValue();
         int year = localDate.getYear();
-        return LocalDate.of(year,month,day.intValue());
+
+        return LocalDate.of(year,month,dayInternal);
     }
 }

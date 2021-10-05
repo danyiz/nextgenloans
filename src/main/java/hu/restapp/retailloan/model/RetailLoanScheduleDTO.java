@@ -5,31 +5,36 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-
+@NoArgsConstructor
+@ToString
 @AllArgsConstructor
 public class RetailLoanScheduleDTO {
     @Getter@Setter
-    LocalDate valueDate;
+    private LocalDate valueDate;
     @Getter@Setter
-    String accountNumber;
+    private String currencyCode;
     @Getter@Setter
-    public int numberOfPayments;
+    private String accountNumber;
     @Getter@Setter
-    public BigDecimal outstandingPrincipal;
+    private int numberOfPayments;
     @Getter@Setter
-    public BigDecimal interestPart;
+    private BigDecimal loanPrincipalAmount;
     @Getter@Setter
-    public BigDecimal principalPart;
+    private BigDecimal interestPart;
     @Getter@Setter
-    public BigDecimal regularPayment;
+    private BigDecimal principalPart;
     @Getter@Setter
-    public BigDecimal standardInterestRate;
+    private BigDecimal regularPayment;
     @Getter@Setter
-    public BigDecimal subsidizedInterestRate;
+    private BigDecimal loanInterestRate;
     @Getter@Setter
-    public BigDecimal interestBonusRate;
+    private BigDecimal subsidizedInterestRate;
+    @Getter@Setter
+    private BigDecimal interestBonusRate;
     @Setter
-    public BigDecimal effectiveInterestRate;
+    private BigDecimal effectiveInterestRate;
+    @Getter@Setter
+    private Integer nextPaymentNumber;
 
     public BigDecimal getEffectiveInterestRate(BigDecimal standardInterestRate) {
         return standardInterestRate.subtract(interestBonusRate).subtract(subsidizedInterestRate) ;
