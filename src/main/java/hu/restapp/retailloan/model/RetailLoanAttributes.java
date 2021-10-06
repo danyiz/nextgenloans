@@ -22,7 +22,11 @@ public class RetailLoanAttributes {
 
     InterestCalculatorTypes interestCalculatorType = InterestCalculatorTypes.BASIC;
     RegularPaymentCalculatorTypes regularPaymentCalculatorType = RegularPaymentCalculatorTypes.BASIC;
+    RegularPaymentCalculatorTypes regularPaymentCalculatorTypeBase = RegularPaymentCalculatorTypes.BASIC;
+    RegularPaymentCalculatorTypes delayedPrincipalPaymentCalculatorType = RegularPaymentCalculatorTypes.PRINCIPAL_DELAYED;
     RegularPaymentSplitterTypes regularPaymentSplitterTypes = RegularPaymentSplitterTypes.BASIC;
+    RegularPaymentSplitterTypes regularPaymentSplitterTypesBase = RegularPaymentSplitterTypes.BASIC;
+    RegularPaymentSplitterTypes delayedPrincipalRegularPaymentSplitterType = RegularPaymentSplitterTypes.PRINCIPAL_DELAYED;
 
     @NotNull
     private String accountNumber;

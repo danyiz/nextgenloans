@@ -50,10 +50,10 @@ public class RetailLoanCalculator {
     public BigDecimal calculateRegularPayment(RetailLoanAttributes retailLoanAttributes){
 
         if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>retailLoanAttributes.getNextPaymentNumber()){
-            retailLoanAttributes.setRegularPaymentCalculatorType(RegularPaymentCalculatorTypes.PRINCIPAL_DELAYED);
+            retailLoanAttributes.setRegularPaymentCalculatorType(retailLoanAttributes.getDelayedPrincipalPaymentCalculatorType());
         }else
         {
-            retailLoanAttributes.setRegularPaymentCalculatorType(RegularPaymentCalculatorTypes.BASIC);
+            retailLoanAttributes.setRegularPaymentCalculatorType(retailLoanAttributes.getRegularPaymentCalculatorTypeBase());
         }
 
         RegularPaymentCalculatorInterface regularPaymentCalculatorInterface = regularPaymentCalculatorFactory.createRegularPaymentCalculator(retailLoanAttributes.getRegularPaymentCalculatorType());
@@ -64,10 +64,10 @@ public class RetailLoanCalculator {
     public RetailLoanAttributes splitRegularPayment(RetailLoanAttributes retailLoanAttributes){
 
         if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>retailLoanAttributes.getNextPaymentNumber()){
-           retailLoanAttributes.setRegularPaymentSplitterTypes(RegularPaymentSplitterTypes.PRINCIPAL_DELAYED);
+           retailLoanAttributes.setRegularPaymentSplitterTypes(retailLoanAttributes.getDelayedPrincipalRegularPaymentSplitterType());
         }else
         {
-            retailLoanAttributes.setRegularPaymentSplitterTypes(RegularPaymentSplitterTypes.BASIC);
+            retailLoanAttributes.setRegularPaymentSplitterTypes(retailLoanAttributes.getRegularPaymentSplitterTypesBase());
         }
 
         RegularPaymentSplitterInterface regularPaymentSplitterFactoryInterface = regularPaymentSplitterFactory.createRegularPaymentSplitter(retailLoanAttributes.getRegularPaymentSplitterTypes());
@@ -99,7 +99,7 @@ public class RetailLoanCalculator {
 
             retailLoanAttributes.setInterestPart(calculateLoanInterestPartForPeriod(retailLoanAttributes));
 
-            if ((retailLoanAttributes.getPrincipalPart().longValue() >= retailLoanAttributes.getLoanPrincipalAmount().longValue()) ||
+            if ((retailLoanAttributes.getPrincipalPart().compareTo(retailLoanAttributes.getLoanPrincipalAmount()) >=0) ||
                     (retailLoanAttributes.getNextPaymentNumber().equals(retailLoanAttributes.getNumberOfPayments())))
             {
                 // in last payment the whole principal

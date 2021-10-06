@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @MappedSuperclass
 public abstract class RetailLoanBaseHistory implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
     @Embedded

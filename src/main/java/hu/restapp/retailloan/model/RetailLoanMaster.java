@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "RetailLoanMaster")
+@Table(name = "RetailLoanMaster", indexes = @Index(name = "RetailLoanMasterByAccountNumber", columnList = "accountNumber"))
 public class RetailLoanMaster extends RetailLoanBase {
     @Column(length = 24,nullable = false)
     String publicAccountNumber;
