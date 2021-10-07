@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @Table(name="RetailLoanSchedule")
 public class RetailLoanSchedule {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
     @Embedded

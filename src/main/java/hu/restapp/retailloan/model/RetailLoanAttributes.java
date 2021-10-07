@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @ToString
 public class RetailLoanAttributes {
 
-    InterestCalculatorTypes interestCalculatorType = InterestCalculatorTypes.BASIC;
+    InterestCalculatorTypes interestCalculatorType = InterestCalculatorTypes.BASIC360DIV12;
     RegularPaymentCalculatorTypes regularPaymentCalculatorType = RegularPaymentCalculatorTypes.BASIC;
     RegularPaymentCalculatorTypes regularPaymentCalculatorTypeBase = RegularPaymentCalculatorTypes.BASIC;
     RegularPaymentCalculatorTypes delayedPrincipalPaymentCalculatorType = RegularPaymentCalculatorTypes.PRINCIPAL_DELAYED;

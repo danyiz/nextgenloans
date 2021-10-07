@@ -6,10 +6,9 @@ import hu.restapp.systemutility.SystemFrequency;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -44,33 +43,13 @@ public class LoanController {
     }
 
      @GetMapping("/calcloan")
-    public List<RetailLoanScheduleDTO> calcLoan() {
+         public List<RetailLoanScheduleDTO> calcLoan( @RequestHeader RetailLoanAttributes retailLoanAttributes) {
         log.info("CalcLoan is called");
-        BigDecimal intrate = new BigDecimal("27.90000000");
-        Integer numOfPAy = 18;
-        BigDecimal loanAmount = new BigDecimal("328500.00000000") ;
-        BigDecimal subsidizedRate = new BigDecimal("0.00000000") ;
-        BigDecimal bonusRate = new BigDecimal("0.00000000") ;
-        RetailLoanAttributes retailLoanAttributes = new RetailLoanAttributes();
-        retailLoanAttributes.setTermsToDelayPrincipalPayment(0);
-        retailLoanAttributes.setNextPaymentNumber(1);
-        retailLoanAttributes.setAccountNumber("1111111111111111111111111");
-        retailLoanAttributes.setCalculationBasis(360);
-        retailLoanAttributes.setLoanPrincipalAmount(loanAmount);
-        retailLoanAttributes.setLoanInterestRate(intrate);
-        retailLoanAttributes.setNumberOfPayments(numOfPAy);
-        retailLoanAttributes.setDaysInPeriod(30);
-        retailLoanAttributes.setCorrectionCoefficient(new BigDecimal("1.013889"));
-        retailLoanAttributes.setCurrencyCode("HUF");
-        retailLoanAttributes.setPayDay(12);
-        retailLoanAttributes.setSettlementFrequencyInMoths(1);
-        retailLoanAttributes.setPrincipalPart(new BigDecimal("0"));
-
         try {
-         Currency currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
-         retailLoanAttributes.setCurrencyDecimals(currency.getCurrencyDecimals());
+             Currency currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
+             retailLoanAttributes.setCurrencyDecimals(currency.getCurrencyDecimals());
         } catch (CurrencyNotExistsException e) {
-         e.printStackTrace();
+             e.printStackTrace();
         }
 
         return retailLoanCalculator.generateSchedule(true,retailLoanAttributes);
