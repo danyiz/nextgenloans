@@ -7,6 +7,8 @@ public class InterestCalculatorFactory implements InterestCalculatorFactoryInter
     @Override
     public InterestCalculatorInterface createInterestCalculator(InterestCalculatorTypes calculatorType) {
         switch (calculatorType) {
+            case NEW_ANNUITY_FORMULA:
+                return new NewAnnuityInterestCalculator();
             case BASIC360DIV12:
             default:
                 return new BasicLoanInterestCalculator();

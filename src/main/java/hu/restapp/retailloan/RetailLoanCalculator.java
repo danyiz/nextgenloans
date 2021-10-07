@@ -1,12 +1,12 @@
 package hu.restapp.retailloan;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.restapp.retailloan.model.*;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +24,10 @@ import java.util.List;
 public class RetailLoanCalculator {
 
     @Autowired
-    private RetailLoanScheduleRepository retailLoanScheduleRepository;
+    ObjectMapper objectMapper;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private RetailLoanScheduleRepository retailLoanScheduleRepository;
 
     @Autowired
     private TriggerDateUtility triggerDateUtility;
@@ -79,8 +79,9 @@ public class RetailLoanCalculator {
 
         List<RetailLoanScheduleDTO> loanShed = new ArrayList<>();
         retailLoanAttributes.setValueDate(LocalDate.now());
-
+        retailLoanAttributes.setNextPaymentNumber(1);
         retailLoanAttributes.setRegularPayment(calculateRegularPayment(retailLoanAttributes));
+
 
         for(int i = 1; i< retailLoanAttributes.getNumberOfPayments() +1; i ++) {
 
@@ -112,8 +113,8 @@ public class RetailLoanCalculator {
 
             retailLoanAttributes.setLoanPrincipalAmount(retailLoanAttributes.getLoanPrincipalAmount().subtract(retailLoanAttributes.getPrincipalPart()));
 
-            RetailLoanSchedule scheduleItem = modelMapper.map(retailLoanAttributes, RetailLoanSchedule.class);
-            RetailLoanScheduleDTO scheduleDTO =  modelMapper.map(scheduleItem, RetailLoanScheduleDTO.class);
+            RetailLoanSchedule scheduleItem = objectMapper.convertValue(retailLoanAttributes, RetailLoanSchedule.class);
+            RetailLoanScheduleDTO scheduleDTO =  objectMapper.convertValue(scheduleItem, RetailLoanScheduleDTO.class);
 
             loanShed.add(scheduleDTO);
 

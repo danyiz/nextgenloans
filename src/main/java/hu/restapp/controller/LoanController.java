@@ -1,5 +1,8 @@
 package hu.restapp.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hu.restapp.retailloan.RetailLoanCalculator;
 import hu.restapp.retailloan.model.*;
 import hu.restapp.systemutility.SystemFrequency;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -20,6 +24,9 @@ public class LoanController {
 
     @Autowired
     CurrencyDAO currencyDAO;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Autowired
     RetailLoanCalculator retailLoanCalculator;
@@ -43,7 +50,8 @@ public class LoanController {
     }
 
      @GetMapping("/calcloan")
-         public List<RetailLoanScheduleDTO> calcLoan( @RequestHeader RetailLoanAttributes retailLoanAttributes) {
+     public List<RetailLoanScheduleDTO> calcLoan(@RequestParam String loanAttributes) throws IOException {
+        RetailLoanAttributes retailLoanAttributes = objectMapper.readValue(loanAttributes,RetailLoanAttributes.class);
         log.info("CalcLoan is called");
         try {
              Currency currency = currencyDAO.getCurrency(retailLoanAttributes.getCurrencyCode());
