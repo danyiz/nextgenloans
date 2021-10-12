@@ -36,6 +36,7 @@ public class RetailLoanAttributes {
     @Pattern(regexp = "[0-9]*\\.?[0-9]*[1-9]")
     private BigDecimal loanPrincipalAmount;
     @NotNull
+    @Pattern(regexp = "[0-9]*\\.?[0-9]*[1-9]")
     private BigDecimal loanInterestRate;
     @NotNull
     @Pattern(regexp = "[0-9]*\\.?[0-9]*[1-9]")
