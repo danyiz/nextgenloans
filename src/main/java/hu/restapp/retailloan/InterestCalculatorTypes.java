@@ -1,5 +1,7 @@
 package hu.restapp.retailloan;
 
 public enum InterestCalculatorTypes {
-    BASIC
+    BASIC360DIV12,
+    FRENCH,
+    NEW_ANNUITY_FORMULA
 }

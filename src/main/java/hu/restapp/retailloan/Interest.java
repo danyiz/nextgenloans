@@ -9,5 +9,6 @@ import java.math.BigDecimal;
 @Setter
 public class Interest {
     BigDecimal interestAmount;
+    BigDecimal interestInteger;
     BigDecimal interestWash;
 }

@@ -1,17 +1,17 @@
 package hu.restapp.retailloan;
 
-import hu.restapp.retailloan.model.RetailLoanSchedule;
-import hu.restapp.retailloan.model.RetailLoanScheduleRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.restapp.retailloan.model.*;
 import hu.restapp.systemutility.TriggerDateUtility;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.modelmapper.ModelMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +20,14 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@Slf4j
 public class RetailLoanCalculator {
 
     @Autowired
-    private RetailLoanScheduleRepository retailLoanScheduleRepository;
+    ObjectMapper objectMapper;
 
     @Autowired
-    private ModelMapper modelMapper;
+    private RetailLoanScheduleRepository retailLoanScheduleRepository;
 
     @Autowired
     private TriggerDateUtility triggerDateUtility;
@@ -37,66 +38,96 @@ public class RetailLoanCalculator {
     @Autowired
     InterestCalculatorFactoryInterface interestCalculatorFactory;
 
+    @Autowired
+    RegularPaymentSplitterFactory regularPaymentSplitterFactory;
 
-    public List<ScheduleDTO> loanShed = new ArrayList<>();
-    private int Base = 360;
-    private BigDecimal loanPrincipalAmount;
-    private BigDecimal loanInterestRate;
-    private int numberOfPayments;
-
-    InterestCalculatorTypes interestCalculatorType = InterestCalculatorTypes.BASIC;
-    RegularPaymentCalculatorTypes regularPaymentCalculatorType = RegularPaymentCalculatorTypes.BASIC;
-
-    public BigDecimal calculateLoanInterestPartForPeriod(BigDecimal principalAmount, BigDecimal loanInterestRate, Integer interestBase, Long numberOfDays)
+    public BigDecimal calculateLoanInterestPartForPeriod(RetailLoanAttributes retailLoanAttributes)
     {
-        InterestCalculatorInterface interestCalculatorInterface = interestCalculatorFactory.createInterestCalculator(interestCalculatorType);
-        return interestCalculatorInterface.calculateInterestForPeriod(principalAmount, loanInterestRate,numberOfDays, interestBase).getInterestAmount().round(new MathContext(5));
+        InterestCalculatorInterface interestCalculatorInterface = interestCalculatorFactory.createInterestCalculator(retailLoanAttributes.getInterestCalculatorType());
+        return interestCalculatorInterface.calculateInterestForPeriod(retailLoanAttributes).getInterestAmount().setScale(0, RoundingMode.FLOOR);
     }
 
-    public BigDecimal calculateRegularPayment(){
-        RegularPaymentCalculatorInterface regularPaymentCalculatorInterface = regularPaymentCalculatorFactory.createRegularPaymentCalculator(regularPaymentCalculatorType);
-        return regularPaymentCalculatorInterface.calculateRegularPayment(loanInterestRate,loanPrincipalAmount,numberOfPayments,BigDecimal.valueOf(365/360));
+    public BigDecimal calculateRegularPayment(RetailLoanAttributes retailLoanAttributes){
+
+        if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>retailLoanAttributes.getNextPaymentNumber()){
+            retailLoanAttributes.setRegularPaymentCalculatorType(retailLoanAttributes.getDelayedPrincipalPaymentCalculatorType());
+        }else
+        {
+            retailLoanAttributes.setRegularPaymentCalculatorType(retailLoanAttributes.getRegularPaymentCalculatorTypeBase());
+        }
+
+        RegularPaymentCalculatorInterface regularPaymentCalculatorInterface = regularPaymentCalculatorFactory.createRegularPaymentCalculator(retailLoanAttributes.getRegularPaymentCalculatorType());
+
+        return regularPaymentCalculatorInterface.calculateRegularPayment(retailLoanAttributes);
     }
 
-   public void generateSchedule (boolean persistScheduleToDB) {
+    public RetailLoanAttributes splitRegularPayment(RetailLoanAttributes retailLoanAttributes){
 
-        LocalDate valueDate = LocalDate.now();
-        BigDecimal outstandingPrincipalAmount = loanPrincipalAmount;
+        if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>retailLoanAttributes.getNextPaymentNumber()){
+           retailLoanAttributes.setRegularPaymentSplitterTypes(retailLoanAttributes.getDelayedPrincipalRegularPaymentSplitterType());
+        }else
+        {
+            retailLoanAttributes.setRegularPaymentSplitterTypes(retailLoanAttributes.getRegularPaymentSplitterTypesBase());
+        }
 
-        BigDecimal regularPayment = calculateRegularPayment();
+        RegularPaymentSplitterInterface regularPaymentSplitterFactoryInterface = regularPaymentSplitterFactory.createRegularPaymentSplitter(retailLoanAttributes.getRegularPaymentSplitterTypes());
 
-        for(int i = 1; i< numberOfPayments +1; i ++) {
+        return regularPaymentSplitterFactoryInterface.splitRegularPayment(retailLoanAttributes);
+    }
 
-            valueDate = triggerDateUtility.calcNextDate(1,valueDate,valueDate.getDayOfMonth());
+   public List<RetailLoanScheduleDTO> generateSchedule (boolean persistScheduleToDB,RetailLoanAttributes retailLoanAttributes) {
 
-            BigDecimal interestForPeriod = calculateLoanInterestPartForPeriod(outstandingPrincipalAmount, loanInterestRate,this.Base,30L);
+        List<RetailLoanScheduleDTO> loanShed = new ArrayList<>();
+        retailLoanAttributes.setValueDate(LocalDate.now());
+        retailLoanAttributes.setNextPaymentNumber(1);
+        retailLoanAttributes.setRegularPayment(calculateRegularPayment(retailLoanAttributes));
 
-            BigDecimal principalAmountPartForPeriod = regularPayment.subtract(interestForPeriod);
 
-            if (principalAmountPartForPeriod.longValue() > outstandingPrincipalAmount.longValue()) {
+        for(int i = 1; i< retailLoanAttributes.getNumberOfPayments() +1; i ++) {
+
+            retailLoanAttributes.setNextPaymentNumber(i);
+            retailLoanAttributes.setValueDate(triggerDateUtility.calcNextDate(retailLoanAttributes.getSettlementFrequencyInMoths(),
+                                                                                retailLoanAttributes.getValueDate(),
+                                                                                retailLoanAttributes.getPayDay()));
+            // Period start date
+            // Period end date
+            // Days in period
+
+            // Interest change array
+            // Early repayment array
+
+            // Generate Eventschema
+
+            retailLoanAttributes.setInterestPart(calculateLoanInterestPartForPeriod(retailLoanAttributes));
+
+            if ((retailLoanAttributes.getPrincipalPart().compareTo(retailLoanAttributes.getLoanPrincipalAmount()) >=0) ||
+                    (retailLoanAttributes.getNextPaymentNumber().equals(retailLoanAttributes.getNumberOfPayments())))
+            {
                 // in last payment the whole principal
-                principalAmountPartForPeriod = outstandingPrincipalAmount;
+                retailLoanAttributes.setPrincipalPart(retailLoanAttributes.getLoanPrincipalAmount());
+            }
+            else
+            {
+                retailLoanAttributes = splitRegularPayment(retailLoanAttributes);
             }
 
-            ScheduleDTO scheduleItem = new ScheduleDTO(valueDate,"111111111111",i,
-                    outstandingPrincipalAmount,
-                    interestForPeriod,
-                    principalAmountPartForPeriod,
-                    regularPayment,
-                    loanInterestRate,
-                    BigDecimal.valueOf(0L),
-                    BigDecimal.valueOf(0L),
-                    BigDecimal.valueOf(0L));
-            loanShed.add(scheduleItem);
+            retailLoanAttributes.setLoanPrincipalAmount(retailLoanAttributes.getLoanPrincipalAmount().subtract(retailLoanAttributes.getPrincipalPart()));
+
+            RetailLoanSchedule scheduleItem = objectMapper.convertValue(retailLoanAttributes, RetailLoanSchedule.class);
+            RetailLoanScheduleDTO scheduleDTO =  objectMapper.convertValue(scheduleItem, RetailLoanScheduleDTO.class);
+
+            loanShed.add(scheduleDTO);
 
             if(persistScheduleToDB){
-                RetailLoanSchedule scheduleItemToPersist =  modelMapper.map(scheduleItem, RetailLoanSchedule.class);
-                scheduleItemToPersist.setDailySequence(1L);
-                retailLoanScheduleRepository.save(scheduleItemToPersist);
+                retailLoanScheduleRepository.save(scheduleItem);
             }
 
-            outstandingPrincipalAmount = outstandingPrincipalAmount.subtract(principalAmountPartForPeriod);
+            if(retailLoanAttributes.getTermsToDelayPrincipalPayment()>0 && retailLoanAttributes.getTermsToDelayPrincipalPayment().equals(retailLoanAttributes.getNextPaymentNumber())){
+                retailLoanAttributes.setNextPaymentNumber(retailLoanAttributes.getNextPaymentNumber()+1);
+                log.info("Recalculating regular payment: {}",retailLoanAttributes);
+                retailLoanAttributes.setRegularPayment(calculateRegularPayment(retailLoanAttributes));
+            }
         }
+        return loanShed;
     }
-
 }

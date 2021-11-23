@@ -2,13 +2,17 @@ package hu.restapp.retailloan.model;
 
 import hu.restapp.retailloan.model.RetailLoanBaseHistory;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@ToString
 @Entity
 @Table(name = "RetailLoanBalances")
 public class RetailLoanBalances extends RetailLoanBaseHistory {

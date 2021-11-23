@@ -1,15 +1,20 @@
 package hu.restapp.retailloan.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@ToString
 @Entity
-@Table(name = "RetailLoanMaster")
+@Table(name = "RetailLoanMaster", indexes = @Index(name = "RetailLoanMasterByAccountNumber", columnList = "accountNumber"))
 public class RetailLoanMaster extends RetailLoanBase {
     @Column(length = 24,nullable = false)
     String publicAccountNumber;
