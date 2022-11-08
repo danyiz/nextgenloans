@@ -1,20 +1,38 @@
 package hu.restapp.systemutility;
 
+import lombok.extern.slf4j.Slf4j;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.model.property.RRule;
+import net.fortuna.ical4j.validate.ValidationException;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Objects;
 
 @Component
-public class TriggerDateUtility implements DateUtility {
+@Slf4j
+public  class TriggerDateUtility {
 
-    @Override
-    public LocalDate getSystemDate() {
+
+    public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DEFAULT_DATETIME_FORMAT = DEFAULT_DATE_FORMAT + " HH:mm:ss";
+    public static final DateTimeFormatter DEFAULT_DATETIME_FORMATTER = new DateTimeFormatterBuilder().appendPattern(DEFAULT_DATETIME_FORMAT)
+            .toFormatter();
+    public static final DateTimeFormatter DEFAULT_DATE_FORMATTER = new DateTimeFormatterBuilder().appendPattern(DEFAULT_DATE_FORMAT)
+            .toFormatter();
+    public static LocalDate getSystemDate() {
         return  LocalDate.now();
     }
 
-    @Override
-    public LocalDate calculateNextDateFromDate(LocalDate fromDate, SystemFrequency frequency, Integer day) {
+
+    public static LocalDate calculateNextDateFromDate(LocalDate fromDate, SystemFrequency frequency, Integer day) {
         if(Objects.isNull(fromDate)) fromDate = LocalDate.now();
         LocalDate localDate = fromDate;
         switch(frequency) {
@@ -45,13 +63,13 @@ public class TriggerDateUtility implements DateUtility {
         return localDate;
     }
 
-    @Override
-    public Long calcDaysBetweenDates(LocalDate fromDate, LocalDate toDate) {
+
+    public static Long calcDaysBetweenDates(LocalDate fromDate, LocalDate toDate) {
         return toDate.toEpochDay() - fromDate.toEpochDay();
     }
 
-    @Override
-    public LocalDate calcNextDate(Integer plusMonths, LocalDate fromDate, Integer day){
+
+    public static LocalDate calcNextDate(Integer plusMonths, LocalDate fromDate, Integer day){
 
         int currentDay = fromDate.getDayOfMonth();
         if (currentDay<day && plusMonths>=1) {
@@ -71,4 +89,69 @@ public class TriggerDateUtility implements DateUtility {
 
         return LocalDate.of(year,month,dayInternal);
     }
+    public static Recur getICalRecur(final String recurringRule) {
+
+        // Construct RRule
+        try {
+            final RRule rrule = new RRule(recurringRule);
+            rrule.validate();
+            return rrule.getRecur();
+        } catch (final ParseException e) {
+            // TODO Auto-generated catch block
+            log.error("Problem occurred in getICalRecur function", e);
+        } catch (final ValidationException e) {
+            // TODO Auto-generated catch block
+            log.error("Problem occurred in getICalRecur function validation", e);
+        }
+
+        return null;
+    }
+    private static LocalDateTime getNextRecurringDate(final Recur recur, final LocalDateTime seedDate, final LocalDateTime startDate) {
+        final DateTime periodStart = new DateTime(java.util.Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant()));
+        final Date seed = convertToiCal4JCompatibleDate(seedDate);
+        final Date nextRecDate = recur.getNextDate(seed, periodStart);
+        return nextRecDate == null ? null : LocalDateTime.ofInstant(nextRecDate.toInstant(),ZoneId.systemDefault());
+    }
+
+    public static LocalDate getNextRecurringDate(final Recur recur, final LocalDate seedDate, final LocalDate startDate) {
+        final DateTime periodStart = new DateTime(java.util.Date.from(startDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        final Date seed = convertToiCal4JCompatibleDate(seedDate.atStartOfDay());
+        final Date nextRecDate = recur.getNextDate(seed, periodStart);
+        return nextRecDate == null ? null : LocalDate.ofInstant(nextRecDate.toInstant(), ZoneId.systemDefault());
+    }
+
+    public static Date convertToiCal4JCompatibleDate(final LocalDateTime inputDate) {
+        Date formattedDate = null;
+        final String seedDateStr = DEFAULT_DATETIME_FORMATTER.format(inputDate);
+        try {
+            formattedDate = new Date(seedDateStr, DEFAULT_DATETIME_FORMAT);
+        } catch (final ParseException e) {
+            log.error("Invalid date: {}", seedDateStr, e);
+        }
+        return formattedDate;
+    }
+
+    public static LocalDateTime getNextRecurringDate(final String recurringRule, final LocalDateTime seedDate,
+                                                     final LocalDateTime startDate) {
+        final Recur recur = getICalRecur(recurringRule);
+        if (recur == null) {
+            return null;
+        }
+
+        //TODO
+        // nextDate = (LocalDateTime) adjustDate(nextDate, seedDate, getMeetingPeriodFrequencyType(recurringRule));
+       return getNextRecurringDate(recur, seedDate, startDate);
+
+    }
+
+    public static LocalDate getNextRecurringDate(final String recurringRule, final LocalDate seedDate, final LocalDate startDate) {
+        final Recur recur = getICalRecur(recurringRule);
+        if (recur == null) {
+            return null;
+        }
+        LocalDate nextDate = getNextRecurringDate(recur, seedDate, startDate);
+        // nextDate = (LocalDate) adjustDate(nextDate, seedDate, getMeetingPeriodFrequencyType(recurringRule));
+        return nextDate;
+    }
+
 }

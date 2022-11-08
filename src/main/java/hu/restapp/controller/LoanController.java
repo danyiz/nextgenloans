@@ -31,11 +31,12 @@ public class LoanController {
     @Autowired
     RetailLoanCalculator retailLoanCalculator;
 
-    @GetMapping("/getnextdate")
-    public String getNextDate() {
-        log.info("Next date is called");
-        LocalDate localDate = LocalDate.now();
-        return new TriggerDateUtility().calculateNextDateFromDate(localDate, SystemFrequency.YEARLY,18).toString();
+    @RequestMapping(path = "/calculatenextday/{recurring}", method = RequestMethod.GET)
+      public String calculatenextday(@PathVariable String recurring) {
+        log.info("calculatenextday is called");
+        LocalDate nextDate = TriggerDateUtility.getNextRecurringDate(recurring,LocalDate.now(),LocalDate.now());
+        log.info("calculatenextday:" + nextDate.toString());
+        return  nextDate.toString();
     }
 
     @GetMapping("/calcdays")
